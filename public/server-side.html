@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPI Autopay Demo - Server-Side Confirmation</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>UPI Autopay Demo</h1>
+      <p class="subtitle">Server-Side Confirmation with setup_future_usage</p>
+    </header>
+
+    <div class="info-box">
+      <h3>What This Demo Shows</h3>
+      <ul>
+        <li>UPI payment with autopay (setup_future_usage)</li>
+        <li>Server-side confirmation for control</li>
+        <li>Using createPaymentMethod (not confirmation tokens)</li>
+        <li>Passing mandate_data for recurring payments</li>
+      </ul>
+      <p style="margin-top: 10px; font-size: 14px;"><strong>Testing:</strong> Test email (<code>succeed_immediately@example.com</code>) is configured on the server for instant success.</p>
+    </div>
+
+    <div class="payment-form">
+      <h2>Payment Details</h2>
+
+      <div class="amount-display">
+        <span class="label">Amount:</span>
+        <span class="value">₹424.24 INR</span>
+      </div>
+
+      <div class="mandate-info">
+        <p><strong>Mandate Setup:</strong> This payment will set up automatic payments with a maximum of ₹150.00 per transaction.</p>
+      </div>
+
+      <form id="payment-form">
+        <div id="address-element">
+          <!-- Stripe Address Element will be inserted here -->
+        </div>
+
+        <div id="payment-element">
+          <!-- Stripe Payment Element will be inserted here -->
+        </div>
+
+        <button type="submit" id="submit-button">
+          <span id="button-text">Pay Now & Setup Autopay</span>
+          <span id="spinner" class="spinner hidden"></span>
+        </button>
+
+        <div id="error-message" class="error hidden"></div>
+        <div id="success-message" class="success hidden"></div>
+      </form>
+    </div>
+
+    <div class="technical-details">
+      <h3>Technical Flow</h3>
+      <ol>
+        <li>Server creates PaymentIntent with <code>setup_future_usage</code> and mandate options on page load</li>
+        <li>Client initializes Elements with <code>clientSecret</code> and <code>paymentMethodCreation: 'manual'</code></li>
+        <li>User fills in payment details via Payment Element (VPA input shown for autopay)</li>
+        <li>On submit, client calls <code>stripe.createPaymentMethod()</code></li>
+        <li>Client sends <code>payment_method</code> + <code>mandate_data</code> to server</li>
+        <li>Server confirms PaymentIntent with both parameters</li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="/server-side.js"></script>
+
+  <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
+    <a href="/" style="color: #635bff; text-decoration: none; font-weight: 500;">Back to Home</a>
+    <span style="margin: 0 10px; color: #d1d5db;">|</span>
+    <a href="/client-side" style="color: #00d924; text-decoration: none; font-weight: 500;">Try Client-Side</a>
+  </div>
+</body>
+</html>
