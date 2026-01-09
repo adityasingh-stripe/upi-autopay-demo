@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UPI Autopay Demo - SetupIntent Flow</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>UPI Autopay Demo</h1>
+      <p class="subtitle">SetupIntent Flow - Save Payment Method Only</p>
+    </header>
+
+    <div class="info-box setup-info">
+      <h3>What This Demo Shows</h3>
+      <ul>
+        <li>SetupIntent API for saving UPI payment method</li>
+        <li>No immediate charge - just saves for future use</li>
+        <li>Creates Customer + PaymentMethod + Mandate</li>
+        <li>Can charge off-session after setup completes</li>
+      </ul>
+      <p style="margin-top: 10px; font-size: 14px;"><strong>Use Case:</strong> Perfect for subscriptions, free trials, or saving payment methods for later.</p>
+    </div>
+
+    <div class="payment-form">
+      <h2>Save Payment Method</h2>
+
+      <div class="amount-display setup-display">
+        <span class="label">Charge Today:</span>
+        <span class="value">₹0.00 INR</span>
+      </div>
+
+      <div class="mandate-info">
+        <p><strong>Mandate Setup:</strong> You're authorizing automatic payments up to ₹1000.00 per transaction for future charges.</p>
+      </div>
+
+      <form id="payment-form">
+        <div id="address-element">
+          <!-- Stripe Address Element will be inserted here -->
+        </div>
+
+        <div id="payment-element">
+          <!-- Stripe Payment Element will be inserted here -->
+        </div>
+
+        <button type="submit" id="submit-button">
+          <span id="button-text">Save Payment Method</span>
+          <span id="spinner" class="spinner hidden"></span>
+        </button>
+
+        <div id="error-message" class="error hidden"></div>
+        <div id="success-message" class="success hidden"></div>
+      </form>
+
+      <!-- Test charge section (shown after successful setup) -->
+      <div id="charge-section" class="hidden" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+        <h3 style="margin-bottom: 16px; color: #333;">Test Future Payment</h3>
+        <p style="color: #666; margin-bottom: 16px; font-size: 14px;">Your payment method is saved! Try charging it:</p>
+        
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="number" id="charge-amount" placeholder="Amount (INR)" value="100" 
+            style="flex: 1; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+          <button type="button" id="charge-button" 
+            style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
+            Charge Now
+          </button>
+        </div>
+        <div id="charge-result" style="margin-top: 12px;"></div>
+      </div>
+    </div>
+
+    <div class="technical-details">
+      <h3>Technical Flow (SetupIntent)</h3>
+      <ol>
+        <li>Server creates Customer + SetupIntent with mandate options</li>
+        <li>Client initializes Elements with SetupIntent <code>clientSecret</code></li>
+        <li>User fills in shipping address and VPA</li>
+        <li>On submit, client calls <code>stripe.confirmSetup()</code> with mandate_data</li>
+        <li>UPI mandate is created and payment method is attached to Customer</li>
+        <li>For future payments: use <code>paymentIntents.create()</code> with <code>off_session: true</code></li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="/setup-intent.js"></script>
+
+  <div style="text-align: center; margin: 20px 0; padding: 20px; background: #f9fafb; border-radius: 8px;">
+    <a href="/" style="color: #635bff; text-decoration: none; font-weight: 500;">Back to Home</a>
+    <span style="margin: 0 10px; color: #d1d5db;">|</span>
+    <a href="/server-side" style="color: #635bff; text-decoration: none; font-weight: 500;">Server-Side PI</a>
+    <span style="margin: 0 10px; color: #d1d5db;">|</span>
+    <a href="/client-side" style="color: #00d924; text-decoration: none; font-weight: 500;">Client-Side PI</a>
+  </div>
+</body>
+</html>
+

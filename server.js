@@ -21,6 +21,10 @@ app.get("/client-side", (req, res) => {
   res.sendFile(__dirname + "/public/client-side.html");
 });
 
+app.get("/setup-intent", (req, res) => {
+  res.sendFile(__dirname + "/public/setup-intent.html");
+});
+
 app.get("/config", (req, res) => {
   res.json({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
@@ -137,6 +141,132 @@ app.post("/confirm-payment-client-side", async (req, res) => {
       type: error.type,
     });
   }
+});
+
+// Create Setup Intent for saving payment method (no immediate charge)
+app.post("/create-setup-intent", async (req, res) => {
+  try {
+    // First, create or retrieve a customer
+    const customer = await stripe.customers.create({
+      email: process.env.TEST_BILLING_EMAIL || "succeed_immediately@example.com",
+    });
+
+    const setupIntent = await stripe.setupIntents.create({
+      customer: customer.id,
+      payment_method_types: ["upi"],
+      payment_method_options: {
+        upi: {
+          mandate_options: {
+            description: "Monthly autopay",
+            amount: 100000, // 1000 INR maximum
+            amount_type: "maximum",
+            end_date: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year from now
+          },
+        },
+      },
+    });
+
+    res.json({
+      clientSecret: setupIntent.client_secret,
+      setupIntentId: setupIntent.id,
+      customerId: customer.id,
+    });
+  } catch (error) {
+    console.error("Error creating setup intent:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Confirm Setup Intent (server-side confirmation)
+app.post("/confirm-setup-intent", async (req, res) => {
+  try {
+    const { setupIntentId, paymentMethodId, mandateData } = req.body;
+
+    if (!setupIntentId || !paymentMethodId || !mandateData) {
+      return res.status(400).json({
+        error: "Missing required fields: setupIntentId, paymentMethodId, or mandateData",
+      });
+    }
+
+    // Confirm the SetupIntent with payment_method and mandate_data
+    const setupIntent = await stripe.setupIntents.confirm(setupIntentId, {
+      payment_method: paymentMethodId,
+      mandate_data: mandateData,
+      return_url: `${req.protocol}://${req.get("host")}/setup-success`,
+    });
+
+    console.log("SetupIntent confirmed. Status:", setupIntent.status);
+    console.log("Next action:", JSON.stringify(setupIntent.next_action, null, 2));
+
+    res.json({
+      success: true,
+      setupIntent: setupIntent,
+      requiresAction: setupIntent.status === "requires_action",
+      nextActionUrl: setupIntent.next_action?.redirect_to_url?.url,
+    });
+  } catch (error) {
+    console.error("Error confirming setup intent:", error);
+    res.status(500).json({
+      error: error.message,
+      type: error.type,
+    });
+  }
+});
+
+// Charge saved payment method (for testing future payments)
+app.post("/charge-saved-method", async (req, res) => {
+  try {
+    const { customerId, paymentMethodId, amount } = req.body;
+
+    if (!customerId || !paymentMethodId) {
+      return res.status(400).json({
+        error: "Missing required fields: customerId or paymentMethodId",
+      });
+    }
+
+    // Create a PaymentIntent using the saved payment method
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount || 10000, // Default 100 INR
+      currency: "inr",
+      customer: customerId,
+      payment_method: paymentMethodId,
+      off_session: true,
+      confirm: true,
+    });
+
+    console.log("Off-session payment created. Status:", paymentIntent.status);
+
+    res.json({
+      success: true,
+      paymentIntent: paymentIntent,
+    });
+  } catch (error) {
+    console.error("Error charging saved method:", error);
+    res.status(500).json({
+      error: error.message,
+      type: error.type,
+    });
+  }
+});
+
+// Setup success page
+app.get("/setup-success", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Setup Successful</title>
+        <link rel="stylesheet" href="/styles.css">
+      </head>
+      <body>
+        <div class="container">
+          <h1>Payment Method Saved!</h1>
+          <p>Your UPI payment method has been saved for future autopay transactions.</p>
+          <a href="/">Back to Home</a>
+        </div>
+      </body>
+    </html>
+  `);
 });
 
 // Success page

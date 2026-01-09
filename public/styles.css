@@ -44,6 +44,19 @@ header h1 {
   margin-bottom: 20px;
 }
 
+.info-box.setup-info {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+}
+
+.info-box.setup-info h3 {
+  color: #92400e;
+}
+
+.info-box.setup-info ul {
+  color: #92400e;
+}
+
 .info-box h3 {
   color: #856404;
   margin-bottom: 12px;
@@ -93,6 +106,15 @@ header h1 {
   color: #333;
   font-size: 24px;
   font-weight: bold;
+}
+
+.amount-display.setup-display {
+  background: #ecfdf5;
+  border: 1px solid #10b981;
+}
+
+.amount-display.setup-display .value {
+  color: #059669;
 }
 
 .mandate-info {
